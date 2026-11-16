@@ -1,0 +1,3 @@
+build/
+tests/harness
+tests/*.f32

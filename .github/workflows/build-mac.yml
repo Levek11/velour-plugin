@@ -1,0 +1,30 @@
+name: Build Velour (macOS)
+
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure
+        run: cmake -B build -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build
+        run: cmake --build build --config Release -j 4
+
+      - name: Sign (ad-hoc) and package
+        run: |
+          cd build/Velour_artefacts/Release
+          codesign --force --deep -s - AU/Velour.component
+          codesign --force --deep -s - VST3/Velour.vst3
+          auval -v aufx Vlr1 Vlra || true
+          ditto -c -k --keepParent AU/Velour.component "$GITHUB_WORKSPACE/Velour-AU.zip"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Velour-AU
+          path: Velour-AU.zip
