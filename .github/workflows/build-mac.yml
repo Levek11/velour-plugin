@@ -25,7 +25,13 @@ jobs:
           cd build/Velour_artefacts/Release
           codesign --force --deep -s - AU/Velour.component
           codesign --force --deep -s - VST3/Velour.vst3
-          auval -v aufx Vlr1 Vlra || true
+          mkdir -p ~/Library/Audio/Plug-Ins/Components
+          rm -rf ~/Library/Audio/Plug-Ins/Components/Velour.component
+          cp -R AU/Velour.component ~/Library/Audio/Plug-Ins/Components/
+          killall -9 AudioComponentRegistrar 2>/dev/null || true
+          sleep 3
+          auval -a | grep -i velour || true
+          auval -strict -v aufx Vlr1 Vlra
           ditto -c -k --keepParent AU/Velour.component "$GITHUB_WORKSPACE/Velour-AU.zip"
 
       - uses: actions/upload-artifact@v4
