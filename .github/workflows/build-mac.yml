@@ -4,6 +4,13 @@ on:
   push:
   workflow_dispatch:
 
+permissions:
+  contents: write
+
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build:
     strategy:
@@ -38,3 +45,13 @@ jobs:
         with:
           name: Velour-AU-${{ matrix.os }}
           path: Velour-AU.zip
+
+      - name: Publish to the "latest" release
+        if: github.ref == 'refs/heads/main'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release view latest >/dev/null 2>&1 || \
+            gh release create latest --title "Velour (latest build)" \
+              --notes "Download Velour-AU.zip, unzip it, and move Velour.component into ~/Library/Audio/Plug-Ins/Components. See README for the one-line quarantine fix." || true
+          gh release upload latest Velour-AU.zip --clobber
